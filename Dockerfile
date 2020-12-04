@@ -1,31 +1,16 @@
-FROM debian:jessie
+# cant reproduce image from git source
+FROM ciricihq/wkhtmltopdf-aas:latest
 
-MAINTAINER Genar Trias <genar@cirici.com>
+RUN apt update \
+&& apt full-upgrade -y \
+&& apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
+&& rm -rf /var/lib/apt/lists/* /tmp/* /root/* \
+&& groupadd --gid 1000 wkhtmltopdf \
+&& useradd --uid 1000 --gid wkhtmltopdf --shell /bin/bash --create-home wkhtmltopdf
 
-RUN apt-get clean && \
-    apt-get update && \
-    apt-get upgrade -y && \
-    apt-get install -y \
-    gdebi \
-    wget \
-    python-pip
-
-WORKDIR /tmp
-
-RUN wget http://download.gna.org/wkhtmltopdf/0.12/0.12.2.1/wkhtmltox-0.12.2.1_linux-jessie-amd64.deb && \
-    gdebi --n wkhtmltox-0.12.2.1_linux-jessie-amd64.deb && \
-    rm wkhtmltox-0.12.2.1_linux-jessie-amd64.deb
-
-RUN ln -s /usr/local/bin/wkhtmltopdf /usr/bin/wkhtmltopdf
-RUN ln -s /usr/local/bin/wkhtmltoimage /usr/bin/wkhtmltoimage
-
-WORKDIR /
-
+# add health endpoint fix port binding
 COPY app.py /app.py
-COPY requeriments.txt /requeriments.txt
 
-RUN pip install -r requeriments.txt
-
-EXPOSE 80
+USER wkhtmltopdf
 
 CMD ["python","app.py"]
